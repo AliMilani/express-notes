@@ -60,16 +60,34 @@ const Notes = mongoose.model(
     })
 );
 
-validateNote = (note) => {
-    const schema = {
+validateNote = (note, options) => {
+    let notesCommonFields = {
         title: Joi.string().min(1).max(255).required(),
         content: Joi.string().min(1).max(90000).required(),
         isPublished: Joi.boolean(),
         author: Joi.string().min(1).max(255).required(),
         primaryLink: Joi.string().min(1).max(255),
-    };
-    return Joi.validate(note, schema);
+    }
+    let notesSchema = Joi.object({
+        ...notesCommonFields,
+    })
+
+    if (getSafe(() => options.method, false) === "put") {
+        notesSchema = Joi.object({
+            ...notesCommonFields
+        }).fork(Object.keys(notesCommonFields), schema => schema.optional());
+    }
+    return notesSchema.validate(note);
 };
+
+function getSafe(fn, defaultVal) {
+    try {
+        return fn();
+    } catch (e) {
+        return defaultVal;
+    }
+}
+
 
 exports.Notes = Notes;
 exports.validate = validateNote;

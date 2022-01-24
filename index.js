@@ -1,9 +1,11 @@
 const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
+const notes = require('./routes/notes');
 
 const app = express();
 app.use(express.json());
+app.use('/api/notes', notes);
 
 const dbUri = process.env.DB_URI;
 
