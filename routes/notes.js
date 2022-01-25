@@ -14,7 +14,7 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-    const { error } = validate(req.body);
+    const { error } = validate.post(req.body);
     if (error) return res.status(400).send(error.details[0].message);
     try {
         const note = await Notes.create(req.body);
@@ -31,7 +31,7 @@ router.post("/", async (req, res) => {
 });
 
 router.put("/:id", async (req, res) => {
-    const { error } = validate(req.body, { method: "put" });
+    const { error } = validate.put(req.body)
     if (error) return res.status(400).send(error);
     try {
         let note = await Notes.findById(req.params.id);
