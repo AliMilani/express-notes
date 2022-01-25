@@ -1,7 +1,6 @@
 const Joi = require("joi");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-// const uniqueValidator = require('mongoose-unique-validator');
 
 const Users = mongoose.model(
     "Users",
@@ -9,7 +8,7 @@ const Users = mongoose.model(
         name: {
             type: String,
             default: "",
-            minlength: 1,
+            minlength: 0,
             maxlength: 50,
             trim: true,
         },
@@ -19,7 +18,7 @@ const Users = mongoose.model(
                 if (this.name) return this.name;
                 return this.email.split("@")[0];
             },
-            minlength: 1,
+            minlength: 0,
             maxlength: 50,
             trim: true,
         },
@@ -72,28 +71,33 @@ const Users = mongoose.model(
         },
     })
 );
-// Users.plugin(uniqueValidator);
 
 validateUsers = {
-    usersCommonFields = {
-        name: Joi.string().min(1).max(50),
-        nickname: Joi.string().min(1).max(50),
+    usersSchema: Joi.object({
+        name: Joi.string().min(0).max(50),
+        nickname: Joi.string().min(0).max(50),
         email: Joi.string().min(7).max(320).required().email(),
         phone: Joi.string().min(10).max(15).required().regex(/^(?=^09)\b\d{11}\b/),
         password: Joi.string().min(7).max(225).required(),
-    },
-    usersSchema = Joi.object({
-        ...usersCommonFields,
     }),
 
+    makeSchemaOptional(schema) {
+        let usersSchemaFields = schema._ids._byKey[Symbol.iterator]();
+        let usersFelids = [];
+        for (let field of usersSchemaFields) {
+            usersFelids.push(field[0]);
+        }
+        return schema.fork(usersFelids, (field) => field.optional());
+    },
+
     post(user) {
-        return usersSchema.validate(user);
+        return this.usersSchema.validate(user);
     },
 
     put(user) {
-        return usersSchema.fork(Object.keys(usersCommonFields), schema => schema.optional()).validate(user);
-    }
-}
+        return this.makeSchemaOptional(this.usersSchema).validate(user);
+    },
+};
 
 exports.Users = Users;
 exports.validate = validateUsers;
